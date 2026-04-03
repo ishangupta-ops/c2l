@@ -1,0 +1,127 @@
+{
+  "theme": {
+    "name": "Swiss & High-Contrast",
+    "mode": "dark",
+    "archetype": 4,
+    "description": "Objective, rigid, functional. The UI is 95% monochrome dark with color used exclusively to guide action and indicate status. Inspired by high-end developer tools and command centers."
+  },
+  "colors": {
+    "background": "bg-neutral-950",
+    "surface": "bg-neutral-900",
+    "surface_hover": "hover:bg-neutral-800",
+    "border": "border-neutral-800",
+    "border_hover": "hover:border-neutral-700",
+    "text": {
+      "primary": "text-white",
+      "secondary": "text-neutral-400",
+      "tertiary": "text-neutral-500",
+      "inverse": "text-black"
+    },
+    "brand": {
+      "primary": "bg-white text-black hover:bg-neutral-200",
+      "secondary": "bg-neutral-800 text-white hover:bg-neutral-700"
+    },
+    "status": {
+      "on_track": "text-emerald-400 bg-emerald-400/10 border border-emerald-400/20",
+      "at_risk": "text-amber-400 bg-amber-400/10 border border-amber-400/20",
+      "delayed": "text-rose-400 bg-rose-400/10 border border-rose-400/20",
+      "completed": "text-blue-400 bg-blue-400/10 border border-blue-400/20"
+    }
+  },
+  "typography": {
+    "heading_font": "Clash Display",
+    "body_font": "Manrope",
+    "rules": {
+      "h1": "text-4xl sm:text-5xl font-semibold tracking-tighter text-white",
+      "h2": "text-2xl sm:text-3xl font-medium tracking-tight text-white",
+      "h3": "text-xl sm:text-2xl font-medium tracking-tight text-white",
+      "h4": "text-lg font-medium text-white",
+      "body": "text-base font-normal text-neutral-300 leading-relaxed",
+      "small": "text-sm text-neutral-400",
+      "label": "text-xs font-bold uppercase tracking-[0.2em] text-neutral-500"
+    },
+    "font_imports": [
+      "@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');",
+      "@import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap');"
+    ]
+  },
+  "spacing_and_layout": {
+    "container_padding": "p-6 md:p-8 lg:p-12",
+    "grid_gap": "gap-6",
+    "card_radius": "rounded-none md:rounded-md",
+    "layout_strategy": "Control Room Grid (Dense, functional, F-Pattern hierarchy)",
+    "rules": [
+      "Use sharp edges or subtle roundness (max 8px).",
+      "Containers with border must have internal padding (p-6).",
+      "Use grid-cols-1 md:grid-cols-4 lg:grid-cols-6 for dashboard metrics.",
+      "Sidebar navigation should be collapsible and sticky."
+    ]
+  },
+  "components": {
+    "cards": "bg-neutral-900 border border-neutral-800 rounded-md shadow-sm transition-all duration-200 hover:border-neutral-700",
+    "buttons": {
+      "primary": "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-neutral-950 bg-white text-black hover:bg-neutral-200 h-10 py-2 px-4",
+      "secondary": "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-neutral-950 border border-neutral-800 bg-transparent hover:bg-neutral-800 text-white h-10 py-2 px-4"
+    },
+    "inputs": "flex h-10 w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm ring-offset-neutral-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white",
+    "tabs": "Flat underline or sharp box active state. Override default shadcn rounded pills. Text should be neutral-400 for inactive, white for active.",
+    "badges": "inline-flex items-center rounded border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 ring-offset-neutral-950",
+    "table": "w-full text-sm text-left. Header row should have border-b border-neutral-800 text-neutral-400. Rows should have border-b border-neutral-800/50 hover:bg-neutral-900/50."
+  },
+  "interactions": {
+    "hover_states": "Interactive elements must slightly lift (-translate-y-0.5) or lighten background/border. Must explicitly set text color on hover.",
+    "focus_states": "focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-950 for high contrast accessibility.",
+    "animations": "Subtle and fast. transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease."
+  },
+  "icons": {
+    "library": "lucide-react",
+    "usage": "Use stroke-width 1.5 for a clean, technical look. Icon size 16px to 20px (w-4 h-4 or w-5 h-5)."
+  },
+  "media": {
+    "product_packaging": [
+      {
+        "url": "https://images.unsplash.com/photo-1753758541974-e9e1d66cfbd9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwyfHxwcm9kdWN0JTIwcGFja2FnaW5nJTIwZGVzaWduJTIwbWluaW1hbHxlbnwwfHx8fDE3NzUyMTE0Mzd8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Face mask sheet boxes for various skin concerns are shown.",
+        "category": "packaging_tab"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1744798516778-22e8b144eab9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwzfHxwcm9kdWN0JTIwcGFja2FnaW5nJTIwZGVzaWduJTIwbWluaW1hbHxlbnwwfHx8fDE3NzUyMTE0Mzd8MA&ixlib=rb-4.1.0&q=85",
+        "description": "A box of hydration+ face sheet masks.",
+        "category": "packaging_tab"
+      }
+    ],
+    "manufacturers": [
+      {
+        "url": "https://images.unsplash.com/photo-1772305336606-989a457ffbae?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwzfHxtYW51ZmFjdHVyaW5nJTIwZmFjaWxpdHklMjBjbGVhbiUyMG1vZGVybnxlbnwwfHx8fDE3NzUyMTE0Mzd8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Empty industrial warehouse with polished concrete floor",
+        "category": "manufacturer_photo"
+      },
+      {
+        "url": "https://images.pexels.com/photos/36823725/pexels-photo-36823725.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Spacious and modern food production plant interior with industrial machinery and processing line.",
+        "category": "manufacturer_photo"
+      }
+    ],
+    "avatars": [
+      {
+        "url": "https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff",
+        "description": "Team member avatar placeholder 1",
+        "category": "team_avatar"
+      },
+      {
+        "url": "https://ui-avatars.com/api/?name=Jane+Smith&background=F59E0B&color=fff",
+        "description": "Team member avatar placeholder 2",
+        "category": "team_avatar"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the dark theme colors provided. Avoid using fully transparent backgrounds over any data-heavy section.",
+    "Utilize Shadcn components for complex interactions (Dropdowns, Modals, Tabs, Tables) but customize their tailwind classes to match the rigid, sharp-edged, high-contrast aesthetic.",
+    "For the Timeline Analysis page, use custom HTML/CSS (divs with absolute positioning or flexbox) for Gantt-like progress bars, ensuring they are accessible and color-coded by status.",
+    "All interactive elements MUST have data-testid attributes (e.g., data-testid='create-project-btn').",
+    "Never use generic fonts like Inter, Roboto, or Open Sans for headings. Implement Clash Display (from Fontshare) for headings and Manrope for body text.",
+    "Do not use placeholder image services like via.placeholder.com. Use the provided URLs in the media section.",
+    "Ensure every page features a visible sidebar navigation and a sticky header with a backdrop blur (e.g., backdrop-blur-xl bg-neutral-950/80)."
+  ]
+}
