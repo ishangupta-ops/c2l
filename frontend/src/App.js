@@ -1,53 +1,93 @@
-import { useEffect } from "react";
+import { useState, useCallback, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { Toaster, toast } from "@/components/ui/sonner";
+import { Sidebar } from "@/components/Sidebar";
+import DashboardPage from "@/pages/DashboardPage";
+import ProjectDetailPage from "@/pages/ProjectDetailPage";
+import TimelinePage from "@/pages/TimelinePage";
+import ColorBankPage from "@/pages/ColorBankPage";
+import ManufacturersPage from "@/pages/ManufacturersPage";
+import { fetchProjects, fetchColors, fetchManufacturers, seedData } from "@/lib/api";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+function AppContent() {
+  const [projects, setProjects] = useState([]);
+  const [colors, setColors] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-const Home = () => {
-  const helloWorldApi = async () => {
+  const loadData = useCallback(async () => {
     try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+      const [p, c, m] = await Promise.all([fetchProjects(), fetchColors(), fetchManufacturers()]);
+      setProjects(p);
+      setColors(c);
+      setManufacturers(m);
+      if (p.length === 0 && c.length === 0 && m.length === 0) {
+        await seedData();
+        const [p2, c2, m2] = await Promise.all([fetchProjects(), fetchColors(), fetchManufacturers()]);
+        setProjects(p2);
+        setColors(c2);
+        setManufacturers(m2);
+      }
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
   }, []);
 
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const refreshProjects = async () => {
+    const p = await fetchProjects();
+    setProjects(p);
+  };
+  const refreshColors = async () => {
+    const c = await fetchColors();
+    setColors(c);
+  };
+  const refreshManufacturers = async () => {
+    const m = await fetchManufacturers();
+    setManufacturers(m);
+  };
+
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="flex min-h-screen bg-neutral-950" data-testid="app-root">
+      <Sidebar projects={projects} navigate={navigate} />
+      <main className="flex-1 ml-56 min-h-screen main-scroll overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center min-h-screen" data-testid="loading-spinner">
+            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          </div>
+        ) : (
+          <Routes>
+            <Route path="/" element={<DashboardPage projects={projects} refreshProjects={refreshProjects} navigate={navigate} />} />
+            <Route path="/project/:id" element={<ProjectDetailWrapper projects={projects} refreshProjects={refreshProjects} colors={colors} navigate={navigate} />} />
+            <Route path="/timeline" element={<TimelinePage projects={projects} navigate={navigate} />} />
+            <Route path="/colors" element={<ColorBankPage colors={colors} refreshColors={refreshColors} />} />
+            <Route path="/manufacturers" element={<ManufacturersPage manufacturers={manufacturers} refreshManufacturers={refreshManufacturers} />} />
+          </Routes>
+        )}
+      </main>
+      <Toaster position="bottom-right" theme="dark" />
     </div>
   );
-};
+}
+
+function ProjectDetailWrapper({ projects, refreshProjects, colors, navigate }) {
+  const { id } = useParams();
+  const project = projects.find(p => p.id === id);
+  if (!project) return <div className="flex items-center justify-center min-h-screen text-neutral-500">Project not found</div>;
+  return <ProjectDetailPage project={project} refreshProjects={refreshProjects} colors={colors} navigate={navigate} />;
+}
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 
