@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { Rocket, Eye, EyeOff } from 'lucide-react';
 
@@ -12,6 +13,7 @@ function formatApiErrorDetail(detail) {
 
 export default function LoginPage() {
   const { login, register } = useAuth();
+  const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,6 +32,7 @@ export default function LoginPage() {
       } else {
         await login(email, password);
       }
+      navigate('/', { replace: true });
     } catch (err) {
       setError(formatApiErrorDetail(err.response?.data?.detail) || err.message);
     } finally {

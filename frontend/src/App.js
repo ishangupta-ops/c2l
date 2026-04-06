@@ -87,12 +87,23 @@ function ProjectDetailWrapper({ projects, refreshProjects, colors, navigate }) {
   return <ProjectDetailPage project={project} refreshProjects={refreshProjects} colors={colors} navigate={navigate} />;
 }
 
+function LoginGuard() {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-neutral-950">
+      <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+    </div>
+  );
+  if (user && user !== false) return <Navigate to="/" replace />;
+  return <LoginPage />;
+}
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<LoginGuard />} />
           <Route path="/*" element={
             <ProtectedRoute>
               <AppContent />
