@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Palette, Factory, Plus } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Palette, Factory, Plus, LogOut } from 'lucide-react';
 import { STATUS_COLORS } from '@/lib/constants';
+import { useAuth } from '@/lib/AuthContext';
 
 const navItems = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -11,6 +12,12 @@ const navItems = [
 
 export function Sidebar({ projects, navigate }) {
   const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
     <aside className="fixed top-0 left-0 bottom-0 w-56 bg-neutral-900 border-r border-neutral-800 flex flex-col z-20" data-testid="sidebar">
@@ -63,7 +70,7 @@ export function Sidebar({ projects, navigate }) {
         </div>
       </nav>
 
-      <div className="p-3 border-t border-neutral-800">
+      <div className="p-3 border-t border-neutral-800 space-y-2">
         <button
           data-testid="sidebar-new-project-btn"
           onClick={() => navigate('/?new=true')}
@@ -72,6 +79,14 @@ export function Sidebar({ projects, navigate }) {
           <Plus className="w-3.5 h-3.5" strokeWidth={2} />
           New Project
         </button>
+        {user && (
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11px] text-neutral-500 truncate">{user.name || user.email}</span>
+            <button data-testid="logout-btn" onClick={handleLogout} className="text-neutral-500 hover:text-white transition-colors p-1" title="Sign out">
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

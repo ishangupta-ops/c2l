@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TEAMS } from '@/lib/constants';
-import { createProject, updateProject } from '@/lib/api';
+import { createProject, updateProject, fetchNPDTemplate } from '@/lib/api';
 import { toast } from 'sonner';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, FileText } from 'lucide-react';
 
 const emptyProject = {
   name: '', cat: '', owner: '', launch: '', alau: '', pd: '', ad: '',
@@ -25,6 +25,7 @@ export default function ProjectModal({ open, onClose, onSaved, editProject }) {
 
   const [form, setForm] = useState(initial);
   const [saving, setSaving] = useState(false);
+  const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
   const toggleTeam = (team) => setForm(f => ({
@@ -47,6 +48,21 @@ export default function ProjectModal({ open, onClose, onSaved, editProject }) {
     phases: f.phases.map((ph, i) => i === idx ? { ...ph, [field]: val } : ph),
   }));
 
+  const loadNPDTemplate = async () => {
+    setLoadingTemplate(true);
+    try {
+      const data = await fetchNPDTemplate();
+      const phases = (data.phases || []).map(ph => ({
+        ...ph,
+        id: crypto.randomUUID(),
+        steps: (ph.steps || []).map(s => ({ ...s, id: crypto.randomUUID() })),
+      }));
+      setForm(f => ({ ...f, phases, teams: ['NPD', 'R&D', 'Design & Creatives', 'Supply', 'Quality'] }));
+      toast.success('NPD template loaded with 8 phases & 54 steps');
+    } catch { toast.error('Failed to load template'); }
+    finally { setLoadingTemplate(false); }
+  };
+
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Project name is required'); return; }
     setSaving(true);
@@ -58,7 +74,8 @@ export default function ProjectModal({ open, onClose, onSaved, editProject }) {
         ui: form.ui ? parseInt(form.ui) : null,
         ci: form.ci ? parseInt(form.ci) : null,
         phases: form.phases.filter(ph => ph.name.trim()).map(ph => ({
-          ...ph, name: ph.name.trim(), status: ph.status || 'pending', progress: ph.progress || 0, steps: ph.steps || [],
+          ...ph, name: ph.name.trim(), status: ph.status || 'pending', progress: ph.progress || 0,
+          steps: (ph.steps || []).map(s => ({ ...s, date_history: s.date_history || [] })),
         })),
       };
       if (isEdit) {
@@ -85,7 +102,6 @@ export default function ProjectModal({ open, onClose, onSaved, editProject }) {
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
-          {/* Name */}
           <div>
             <label className="text-xs font-bold uppercase tracking-[0.15em] text-neutral-500 mb-1.5 block">Project Name *</label>
             <input data-testid="project-name-input" value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Herbal Body Wash" className="w-full h-9 rounded-md border border-neutral-800 bg-neutral-950 px-3 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-600" />
@@ -161,7 +177,7 @@ export default function ProjectModal({ open, onClose, onSaved, editProject }) {
             </div>
           </div>
 
-          {/* R&D Section */}
+          {/* R&D */}
           <div className="pt-3 border-t border-neutral-800">
             <div className="text-[10px] font-bold tracking-[0.15em] uppercase text-neutral-500 mb-3">R&D / Formulation</div>
             <div className="grid grid-cols-3 gap-3">
@@ -192,18 +208,7 @@ export default function ProjectModal({ open, onClose, onSaved, editProject }) {
             <div className="text-[10px] font-bold tracking-[0.15em] uppercase text-neutral-500 mb-3">Teams Involved</div>
             <div className="flex flex-wrap gap-2">
               {TEAMS.map(team => (
-                <button
-                  key={team}
-                  data-testid={`team-toggle-${team.toLowerCase().replace(/\s+/g, '-')}`}
-                  onClick={() => toggleTeam(team)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                    form.teams.includes(team)
-                      ? 'bg-white/10 text-white border-white/20'
-                      : 'text-neutral-400 border-neutral-800 hover:border-neutral-600'
-                  }`}
-                >
-                  {team}
-                </button>
+                <button key={team} onClick={() => toggleTeam(team)} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${form.teams.includes(team) ? 'bg-white/10 text-white border-white/20' : 'text-neutral-400 border-neutral-800 hover:border-neutral-600'}`}>{team}</button>
               ))}
             </div>
           </div>
@@ -213,7 +218,7 @@ export default function ProjectModal({ open, onClose, onSaved, editProject }) {
             <div className="text-[10px] font-bold tracking-[0.15em] uppercase text-neutral-500 mb-3">Packaging</div>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="text-xs font-bold uppercase tracking-[0.15em] text-neutral-500 mb-1.5 block">Packaging Type</label>
+                <label className="text-xs font-bold uppercase tracking-[0.15em] text-neutral-500 mb-1.5 block">Type</label>
                 <Select value={form.pt || 'none'} onValueChange={v => set('pt', v === 'none' ? '' : v)}>
                   <SelectTrigger className="h-9 bg-neutral-950 border-neutral-800 text-white"><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent className="bg-neutral-900 border-neutral-800">
@@ -235,48 +240,40 @@ export default function ProjectModal({ open, onClose, onSaved, editProject }) {
                 </Select>
               </div>
             </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-[0.15em] text-neutral-500 mb-1.5 block">Packaging Notes</label>
-              <input value={form.pn} onChange={e => set('pn', e.target.value)} placeholder="e.g. Airless pump — China sourcing" className="w-full h-9 rounded-md border border-neutral-800 bg-neutral-950 px-3 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-600" />
-            </div>
+            <input value={form.pn} onChange={e => set('pn', e.target.value)} placeholder="Packaging notes..." className="w-full h-9 rounded-md border border-neutral-800 bg-neutral-950 px-3 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-600" />
           </div>
 
           {/* Phases */}
           <div className="pt-3 border-t border-neutral-800">
-            <div className="text-[10px] font-bold tracking-[0.15em] uppercase text-neutral-500 mb-3">Phases</div>
-            <div className="space-y-2">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-[10px] font-bold tracking-[0.15em] uppercase text-neutral-500">Phases</div>
+              {!isEdit && (
+                <button data-testid="load-npd-template-btn" onClick={loadNPDTemplate} disabled={loadingTemplate} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-400/10 text-blue-400 border border-blue-400/20 hover:bg-blue-400/20 transition-colors disabled:opacity-50">
+                  <FileText className="w-3 h-3" />{loadingTemplate ? 'Loading...' : 'Load NPD Template (54 steps)'}
+                </button>
+              )}
+            </div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
               {form.phases.map((ph, i) => (
                 <div key={ph.id} className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-md px-3 py-2">
                   <span className="text-[11px] font-mono text-neutral-500 min-w-[20px]">{i + 1}</span>
-                  <input
-                    data-testid={`phase-name-input-${i}`}
-                    value={ph.name}
-                    onChange={e => updatePhase(i, 'name', e.target.value)}
-                    placeholder="Phase name"
-                    className="flex-1 h-7 bg-transparent border-none text-sm text-white placeholder:text-neutral-600 focus:outline-none"
-                  />
+                  <input data-testid={`phase-name-input-${i}`} value={ph.name} onChange={e => updatePhase(i, 'name', e.target.value)} placeholder="Phase name" className="flex-1 h-7 bg-transparent border-none text-sm text-white placeholder:text-neutral-600 focus:outline-none" />
                   <Select value={ph.team} onValueChange={v => updatePhase(i, 'team', v)}>
                     <SelectTrigger className="h-7 w-40 bg-transparent border-neutral-700 text-xs text-neutral-300"><SelectValue /></SelectTrigger>
                     <SelectContent className="bg-neutral-900 border-neutral-800">
                       {TEAMS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <button onClick={() => removePhase(i)} className="text-neutral-500 hover:text-rose-400 transition-colors p-1">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  {ph.steps?.length > 0 && <span className="text-[10px] text-neutral-600">{ph.steps.length} steps</span>}
+                  <button onClick={() => removePhase(i)} className="text-neutral-500 hover:text-rose-400 transition-colors p-1"><X className="w-3.5 h-3.5" /></button>
                 </div>
               ))}
             </div>
-            <button
-              data-testid="add-phase-btn"
-              onClick={addPhase}
-              className="w-full mt-2 py-2 border border-dashed border-neutral-700 rounded-md text-xs text-neutral-500 hover:text-white hover:border-neutral-500 transition-colors"
-            >
+            <button data-testid="add-phase-btn" onClick={addPhase} className="w-full mt-2 py-2 border border-dashed border-neutral-700 rounded-md text-xs text-neutral-500 hover:text-white hover:border-neutral-500 transition-colors">
               <Plus className="w-3.5 h-3.5 inline mr-1" />Add Phase
             </button>
           </div>
 
-          {/* Notes */}
           <div>
             <label className="text-xs font-bold uppercase tracking-[0.15em] text-neutral-500 mb-1.5 block">Notes</label>
             <textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Additional context..." rows={2} className="w-full rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-600 resize-none" />

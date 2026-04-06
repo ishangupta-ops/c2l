@@ -9,8 +9,11 @@ class NPDTrackerAPITester:
         self.tests_run = 0
         self.tests_passed = 0
         self.created_ids = {"projects": [], "colors": [], "manufacturers": []}
+        self.session = requests.Session()  # For cookie management
+        self.auth_token = None
+        self.user_data = None
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None, use_session=True):
         """Run a single API test"""
         url = f"{self.base_url}/api/{endpoint}"
         if headers is None:
@@ -21,16 +24,19 @@ class NPDTrackerAPITester:
         print(f"   URL: {url}")
         
         try:
+            # Use session for cookie management or regular requests
+            client = self.session if use_session else requests
+            
             if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=10)
+                response = client.get(url, headers=headers, timeout=10)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=10)
+                response = client.post(url, json=data, headers=headers, timeout=10)
             elif method == 'PUT':
-                response = requests.put(url, json=data, headers=headers, timeout=10)
+                response = client.put(url, json=data, headers=headers, timeout=10)
             elif method == 'DELETE':
-                response = requests.delete(url, headers=headers, timeout=10)
+                response = client.delete(url, headers=headers, timeout=10)
             elif method == 'PATCH':
-                response = requests.patch(url, json=data, headers=headers, timeout=10)
+                response = client.patch(url, json=data, headers=headers, timeout=10)
 
             success = response.status_code == expected_status
             if success:
@@ -57,6 +63,297 @@ class NPDTrackerAPITester:
         except Exception as e:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
+
+    # === AUTH TESTS ===
+    def test_auth_register(self):
+        """Test user registration"""
+        test_user = {
+            "email": f"test_{datetime.now().strftime('%H%M%S')}@test.com",
+            "password": "testpass123",
+            "name": "Test User"
+        }
+        
+        success, response = self.run_test(
+            "User Registration",
+            "POST",
+            "auth/register",
+            200,
+            data=test_user
+        )
+        if success:
+            print(f"   Registered user: {response.get('email', 'Unknown')}")
+            print(f"   User role: {response.get('role', 'Unknown')}")
+            # Check if cookies are set
+            cookies = self.session.cookies.get_dict()
+            if 'access_token' in cookies:
+                print(f"   ✅ Access token cookie set")
+            if 'refresh_token' in cookies:
+                print(f"   ✅ Refresh token cookie set")
+        return success
+
+    def test_auth_login_admin(self):
+        """Test admin login with correct credentials"""
+        admin_creds = {
+            "email": "admin@launchcontrol.com",
+            "password": "admin123"
+        }
+        
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "auth/login",
+            200,
+            data=admin_creds
+        )
+        if success:
+            self.user_data = response
+            print(f"   Logged in as: {response.get('email', 'Unknown')}")
+            print(f"   User role: {response.get('role', 'Unknown')}")
+            # Check if cookies are set
+            cookies = self.session.cookies.get_dict()
+            if 'access_token' in cookies:
+                print(f"   ✅ Access token cookie set")
+            if 'refresh_token' in cookies:
+                print(f"   ✅ Refresh token cookie set")
+        return success
+
+    def test_auth_login_invalid(self):
+        """Test login with invalid credentials"""
+        invalid_creds = {
+            "email": "invalid@test.com",
+            "password": "wrongpassword"
+        }
+        
+        success, response = self.run_test(
+            "Invalid Login (should fail)",
+            "POST",
+            "auth/login",
+            401,
+            data=invalid_creds
+        )
+        return success
+
+    def test_auth_me(self):
+        """Test getting current user info"""
+        success, response = self.run_test(
+            "Get Current User (/auth/me)",
+            "GET",
+            "auth/me",
+            200
+        )
+        if success:
+            print(f"   Current user: {response.get('email', 'Unknown')}")
+            print(f"   User role: {response.get('role', 'Unknown')}")
+        return success
+
+    def test_auth_refresh(self):
+        """Test token refresh"""
+        success, response = self.run_test(
+            "Refresh Token",
+            "POST",
+            "auth/refresh",
+            200
+        )
+        if success:
+            print(f"   Token refreshed successfully")
+        return success
+
+    def test_auth_logout(self):
+        """Test logout"""
+        success, response = self.run_test(
+            "Logout",
+            "POST",
+            "auth/logout",
+            200
+        )
+        if success:
+            print(f"   Logged out successfully")
+            # Check if cookies are cleared
+            cookies = self.session.cookies.get_dict()
+            if 'access_token' not in cookies and 'refresh_token' not in cookies:
+                print(f"   ✅ Auth cookies cleared")
+        return success
+
+    def test_auth_protected_without_login(self):
+        """Test accessing protected endpoint without authentication"""
+        # Clear session cookies first
+        self.session.cookies.clear()
+        
+        success, response = self.run_test(
+            "Protected Endpoint Without Auth (should fail)",
+            "GET",
+            "auth/me",
+            401
+        )
+        return success
+
+    # === NPD TEMPLATE TESTS ===
+    def test_get_npd_template(self):
+        """Test getting NPD template"""
+        success, response = self.run_test(
+            "Get NPD Template",
+            "GET",
+            "template/npd",
+            200
+        )
+        if success:
+            phases = response.get('phases', [])
+            total_steps = sum(len(phase.get('steps', [])) for phase in phases)
+            print(f"   Template has {len(phases)} phases")
+            print(f"   Template has {total_steps} total steps")
+            if len(phases) == 8 and total_steps == 54:
+                print(f"   ✅ Correct NPD template structure (8 phases, 54 steps)")
+            else:
+                print(f"   ⚠️  Expected 8 phases and 54 steps, got {len(phases)} phases and {total_steps} steps")
+        return success
+
+    # === STEP UPDATE TESTS ===
+    def test_update_step_with_history(self):
+        """Test updating step with date history tracking"""
+        # First login as admin
+        self.test_auth_login_admin()
+        
+        # Get a project with phases and steps
+        if not self.created_ids["projects"]:
+            self.test_get_projects()
+        
+        if not self.created_ids["projects"]:
+            print("❌ No project available for step update test")
+            return False
+        
+        project_id = self.created_ids["projects"][0]
+        
+        # Get project details to find a phase and step
+        success, project = self.run_test(
+            "Get Project for Step Update",
+            "GET",
+            f"projects/{project_id}",
+            200
+        )
+        
+        if not success or not project.get('phases'):
+            print("❌ No phases found in project for step update test")
+            return False
+        
+        phase = project['phases'][0]
+        if not phase.get('steps'):
+            print("❌ No steps found in phase for step update test")
+            return False
+        
+        step = phase['steps'][0]
+        phase_id = phase['id']
+        step_id = step['id']
+        
+        # Update step with new dates
+        update_data = {
+            "planned": "15th March 2025",
+            "actual": "18th March 2025",
+            "owner": "Test Owner",
+            "changed_by": "Test User"
+        }
+        
+        success, response = self.run_test(
+            "Update Step with Date History",
+            "PATCH",
+            f"projects/{project_id}/phases/{phase_id}/steps/{step_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            # Verify the update by getting the project again
+            success2, updated_project = self.run_test(
+                "Verify Step Update",
+                "GET",
+                f"projects/{project_id}",
+                200
+            )
+            
+            if success2:
+                updated_step = None
+                for ph in updated_project.get('phases', []):
+                    if ph['id'] == phase_id:
+                        for st in ph.get('steps', []):
+                            if st['id'] == step_id:
+                                updated_step = st
+                                break
+                        break
+                
+                if updated_step:
+                    print(f"   Updated planned date: {updated_step.get('planned', 'None')}")
+                    print(f"   Updated actual date: {updated_step.get('actual', 'None')}")
+                    print(f"   Updated owner: {updated_step.get('owner', 'None')}")
+                    
+                    date_history = updated_step.get('date_history', [])
+                    print(f"   Date history entries: {len(date_history)}")
+                    
+                    if date_history:
+                        for entry in date_history:
+                            print(f"     - {entry.get('field', 'unknown')} changed from '{entry.get('old_value', '')}' to '{entry.get('new_value', '')}' by {entry.get('changed_by', 'unknown')}")
+        
+        return success
+
+    # === CSV EXPORT TESTS ===
+    def test_csv_export(self):
+        """Test CSV export functionality"""
+        # First login as admin
+        self.test_auth_login_admin()
+        
+        if not self.created_ids["projects"]:
+            self.test_get_projects()
+        
+        if not self.created_ids["projects"]:
+            print("❌ No project available for CSV export test")
+            return False
+        
+        project_id = self.created_ids["projects"][0]
+        
+        # Test CSV export endpoint
+        url = f"{self.base_url}/api/projects/{project_id}/export"
+        
+        self.tests_run += 1
+        print(f"\n🔍 Testing CSV Export...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = self.session.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                
+                # Check content type
+                content_type = response.headers.get('content-type', '')
+                if 'text/csv' in content_type:
+                    print(f"   ✅ Correct content type: {content_type}")
+                else:
+                    print(f"   ⚠️  Unexpected content type: {content_type}")
+                
+                # Check content disposition header
+                content_disposition = response.headers.get('content-disposition', '')
+                if 'attachment' in content_disposition and '.csv' in content_disposition:
+                    print(f"   ✅ Correct content disposition: {content_disposition}")
+                else:
+                    print(f"   ⚠️  Unexpected content disposition: {content_disposition}")
+                
+                # Check CSV content
+                csv_content = response.text
+                lines = csv_content.split('\n')
+                print(f"   CSV has {len(lines)} lines")
+                
+                if len(lines) > 10:  # Should have project info + headers + data
+                    print(f"   ✅ CSV appears to have content")
+                else:
+                    print(f"   ⚠️  CSV seems too short")
+                
+                return True
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False
 
     def test_seed_data(self):
         """Test seeding initial data"""
@@ -331,28 +628,56 @@ class NPDTrackerAPITester:
         return success
 
 def main():
-    print("🚀 Starting NPD Tracker API Tests")
-    print("=" * 50)
+    print("🚀 Starting NPD Tracker API Tests (Iteration 2 - Auth & New Features)")
+    print("=" * 70)
     
     tester = NPDTrackerAPITester()
     
-    # Test sequence
+    # Test sequence - Auth tests first, then existing functionality
     tests = [
+        # Basic API tests
         tester.test_root_endpoint,
         tester.test_seed_data,
+        
+        # Auth tests
+        tester.test_auth_register,
+        tester.test_auth_login_admin,
+        tester.test_auth_login_invalid,
+        tester.test_auth_me,
+        tester.test_auth_refresh,
+        tester.test_auth_logout,
+        tester.test_auth_protected_without_login,
+        
+        # Re-login for protected operations
+        tester.test_auth_login_admin,
+        
+        # NPD Template tests
+        tester.test_get_npd_template,
+        
+        # Project CRUD tests
         tester.test_get_projects,
         tester.test_get_project_detail,
         tester.test_create_project,
         tester.test_update_project,
-        tester.test_delete_project,
+        
+        # Step update with history tracking
+        tester.test_update_step_with_history,
+        
+        # CSV Export test
+        tester.test_csv_export,
+        
+        # Other CRUD tests
         tester.test_get_colors,
         tester.test_create_color,
-        tester.test_delete_color,
         tester.test_get_manufacturers,
         tester.test_create_manufacturer,
         tester.test_update_manufacturer_rating,
-        tester.test_delete_manufacturer,
         tester.test_get_analytics_metrics,
+        
+        # Cleanup tests
+        tester.test_delete_project,
+        tester.test_delete_color,
+        tester.test_delete_manufacturer,
     ]
     
     # Run all tests
@@ -363,7 +688,7 @@ def main():
             print(f"❌ Test {test.__name__} failed with exception: {str(e)}")
     
     # Print final results
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 70)
     print(f"📊 Test Results: {tester.tests_passed}/{tester.tests_run} passed")
     
     if tester.tests_passed == tester.tests_run:

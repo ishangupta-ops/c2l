@@ -1,16 +1,30 @@
 import { useState, useCallback, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 import "@/App.css";
-import { Toaster, toast } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import DashboardPage from "@/pages/DashboardPage";
 import ProjectDetailPage from "@/pages/ProjectDetailPage";
 import TimelinePage from "@/pages/TimelinePage";
 import ColorBankPage from "@/pages/ColorBankPage";
 import ManufacturersPage from "@/pages/ManufacturersPage";
+import LoginPage from "@/pages/LoginPage";
 import { fetchProjects, fetchColors, fetchManufacturers, seedData } from "@/lib/api";
 
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-neutral-950">
+      <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+    </div>
+  );
+  if (user === false) return <Navigate to="/login" replace />;
+  return children;
+}
+
 function AppContent() {
+  const { user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [colors, setColors] = useState([]);
   const [manufacturers, setManufacturers] = useState([]);
@@ -18,6 +32,7 @@ function AppContent() {
   const navigate = useNavigate();
 
   const loadData = useCallback(async () => {
+    if (!user) return;
     try {
       const [p, c, m] = await Promise.all([fetchProjects(), fetchColors(), fetchManufacturers()]);
       setProjects(p);
@@ -32,26 +47,16 @@ function AppContent() {
       }
     } catch (err) {
       console.error('Failed to load data:', err);
-      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const refreshProjects = async () => {
-    const p = await fetchProjects();
-    setProjects(p);
-  };
-  const refreshColors = async () => {
-    const c = await fetchColors();
-    setColors(c);
-  };
-  const refreshManufacturers = async () => {
-    const m = await fetchManufacturers();
-    setManufacturers(m);
-  };
+  const refreshProjects = async () => { const p = await fetchProjects(); setProjects(p); };
+  const refreshColors = async () => { const c = await fetchColors(); setColors(c); };
+  const refreshManufacturers = async () => { const m = await fetchManufacturers(); setManufacturers(m); };
 
   return (
     <div className="flex min-h-screen bg-neutral-950" data-testid="app-root">
@@ -71,7 +76,6 @@ function AppContent() {
           </Routes>
         )}
       </main>
-      <Toaster position="bottom-right" theme="dark" />
     </div>
   );
 }
@@ -86,7 +90,17 @@ function ProjectDetailWrapper({ projects, refreshProjects, colors, navigate }) {
 function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <AppContent />
+            </ProtectedRoute>
+          } />
+        </Routes>
+        <Toaster position="bottom-right" theme="dark" />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
