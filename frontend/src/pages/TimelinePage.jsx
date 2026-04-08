@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { STATUS_COLORS, TYPE_COLORS, TIER_COLORS, RD_COLORS, BIZ_COLORS, RD_CLASSIFICATIONS, BIZ_CLASSIFICATIONS, formatDateForDisplay } from '@/lib/constants';
+import { STATUS_COLORS, STATUS_LABELS, TYPE_COLORS, TIER_COLORS, RD_COLORS, BIZ_COLORS, RD_CLASSIFICATIONS, BIZ_CLASSIFICATIONS, formatDateForDisplay } from '@/lib/constants';
 import { ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
 
 export default function TimelinePage({ projects, navigate }) {
