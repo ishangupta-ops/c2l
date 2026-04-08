@@ -188,23 +188,33 @@ class NPDTrackerAPITester:
         return success
 
     # === NPD TEMPLATE TESTS ===
-    def test_get_npd_template(self):
-        """Test getting NPD template"""
+    def test_npd_template_critical_steps(self):
+        """Test NPD template has critical step flags"""
         success, response = self.run_test(
-            "Get NPD Template",
+            "Get NPD Template - Check Critical Steps",
             "GET",
             "template/npd",
             200
         )
         if success:
             phases = response.get('phases', [])
-            total_steps = sum(len(phase.get('steps', [])) for phase in phases)
-            print(f"   Template has {len(phases)} phases")
+            total_steps = 0
+            critical_steps = 0
+            
+            for phase in phases:
+                steps = phase.get('steps', [])
+                total_steps += len(steps)
+                for step in steps:
+                    if step.get('critical', False):
+                        critical_steps += 1
+            
             print(f"   Template has {total_steps} total steps")
-            if len(phases) == 8 and total_steps == 54:
-                print(f"   ✅ Correct NPD template structure (8 phases, 54 steps)")
+            print(f"   Template has {critical_steps} critical steps")
+            
+            if critical_steps > 0:
+                print(f"   ✅ Critical step flags are present")
             else:
-                print(f"   ⚠️  Expected 8 phases and 54 steps, got {len(phases)} phases and {total_steps} steps")
+                print(f"   ⚠️  No critical steps found in template")
         return success
 
     # === STEP UPDATE TESTS ===
@@ -403,16 +413,17 @@ class NPDTrackerAPITester:
         return success
 
     def test_create_project(self):
-        """Test creating a new project"""
+        """Test creating a new project with new iteration 3 fields"""
         test_project = {
             "name": f"Test Project {datetime.now().strftime('%H%M%S')}",
             "cat": "Test Category",
             "owner": "Test Owner",
-            "launch": "Dec 31, 2025",
+            "launch": "2025-12-31",
             "status": "on-track",
             "type": "NPD",
             "tier": "Challenger",
-            "cx": "Moderate",
+            "rd_class": "Complex - Innovation",  # New R&D Classification
+            "biz_class": "Focus - Core",         # New Business Classification
             "pd": 60,
             "teams": ["NPD", "R&D"],
             "phases": [
@@ -421,7 +432,19 @@ class NPDTrackerAPITester:
                     "team": "NPD",
                     "status": "pending",
                     "progress": 0,
-                    "steps": []
+                    "steps": [
+                        {
+                            "step": "Test Step",
+                            "owner": "Test Owner",
+                            "planned": "2025-03-15",
+                            "actual": "",
+                            "status": "pending",
+                            "problem": "",
+                            "remark": "",
+                            "critical": True,  # Test critical step flag
+                            "date_history": []
+                        }
+                    ]
                 }
             ]
         }
@@ -436,10 +459,17 @@ class NPDTrackerAPITester:
         if success and 'id' in response:
             self.created_ids["projects"].append(response['id'])
             print(f"   Created project: {response['name']}")
+            print(f"   R&D Classification: {response.get('rd_class', 'Not set')}")
+            print(f"   Business Classification: {response.get('biz_class', 'Not set')}")
+            # Check if critical step flag is preserved
+            phases = response.get('phases', [])
+            if phases and phases[0].get('steps'):
+                step = phases[0]['steps'][0]
+                print(f"   Critical step flag: {step.get('critical', False)}")
         return success
 
     def test_update_project(self):
-        """Test updating a project"""
+        """Test updating a project with new iteration 3 fields"""
         if not self.created_ids["projects"]:
             print("❌ No project ID available for update test")
             return False
@@ -452,7 +482,8 @@ class NPDTrackerAPITester:
             "status": "at-risk",
             "type": "NPD",
             "tier": "Challenger",
-            "cx": "Moderate"
+            "rd_class": "Non Complex - Variation L1",  # Different R&D Classification
+            "biz_class": "Experimental"                # Different Business Classification
         }
         
         success, response = self.run_test(
@@ -462,6 +493,9 @@ class NPDTrackerAPITester:
             200,
             data=update_data
         )
+        if success:
+            print(f"   Updated R&D Classification: {response.get('rd_class', 'Not set')}")
+            print(f"   Updated Business Classification: {response.get('biz_class', 'Not set')}")
         return success
 
     def test_delete_project(self):
@@ -653,6 +687,24 @@ def main():
         
         # NPD Template tests
         tester.test_get_npd_template,
+        tester.test_npd_template_critical_steps,
+        """Test getting NPD template"""
+        success, response = self.run_test(
+            "Get NPD Template",
+            "GET",
+            "template/npd",
+            200
+        )
+        if success:
+            phases = response.get('phases', [])
+            total_steps = sum(len(phase.get('steps', [])) for phase in phases)
+            print(f"   Template has {len(phases)} phases")
+            print(f"   Template has {total_steps} total steps")
+            if len(phases) == 8 and total_steps == 54:
+                print(f"   ✅ Correct NPD template structure (8 phases, 54 steps)")
+            else:
+                print(f"   ⚠️  Expected 8 phases and 54 steps, got {len(phases)} phases and {total_steps} steps")
+        return success
         
         # Project CRUD tests
         tester.test_get_projects,

@@ -4,9 +4,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { STATUS_LABELS, STATUS_COLORS, TYPE_COLORS, TIER_COLORS, CX_COLORS, STEP_STATUS_COLORS, TEAM_COLORS, calcProgress, getBlockers } from '@/lib/constants';
+import { STATUS_LABELS, STATUS_COLORS, TYPE_COLORS, TIER_COLORS, RD_COLORS, BIZ_COLORS, STEP_STATUS_COLORS, TEAM_COLORS, calcProgress, getBlockers, formatDateForDisplay } from '@/lib/constants';
 import { deleteProject, updatePhase as apiUpdatePhase, updateStep as apiUpdateStep, exportProjectCSV } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { DatePickerInline } from '@/components/DatePicker';
 import ProjectModal from '@/components/ProjectModal';
 import { toast } from 'sonner';
 
@@ -22,7 +23,8 @@ export default function ProjectDetailPage({ project: p, refreshProjects, colors,
   const sc = STATUS_COLORS[p.status] || STATUS_COLORS['on-track'];
   const tc = TYPE_COLORS[p.type] || TYPE_COLORS['NPD'];
   const trc = TIER_COLORS[p.tier] || TIER_COLORS['Commoner'];
-  const cxc = CX_COLORS[p.cx] || CX_COLORS['Simple'];
+  const rdc = RD_COLORS[p.rd_class] || { text: 'text-neutral-400', bg: 'bg-neutral-400/10' };
+  const bzc = BIZ_COLORS[p.biz_class] || { text: 'text-neutral-400', bg: 'bg-neutral-400/10' };
 
   const handleDelete = async () => {
     if (!window.confirm(`Delete "${p.name}"?`)) return;
@@ -46,6 +48,13 @@ export default function ProjectDetailPage({ project: p, refreshProjects, colors,
 
   const handleStepStatusChange = async (phaseId, stepId, status) => {
     await apiUpdateStep(p.id, phaseId, stepId, { status, changed_by: user?.name || user?.email || 'Unknown' });
+    refreshProjects();
+  };
+
+  const handleDateChange = async (phaseId, stepId, field, value) => {
+    const update = { changed_by: user?.name || user?.email || 'Unknown' };
+    update[field] = value;
+    await apiUpdateStep(p.id, phaseId, stepId, update);
     refreshProjects();
   };
 
@@ -105,12 +114,13 @@ export default function ProjectDetailPage({ project: p, refreshProjects, colors,
             <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white font-display" data-testid="project-detail-title">{p.name}</h1>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               {p.cat && <span className="text-xs text-neutral-400"><strong className="text-neutral-300">{p.cat}</strong></span>}
-              {p.launch && <span className="text-xs text-neutral-400">Launch: <strong className="text-neutral-300">{p.launch}</strong></span>}
+              {p.launch && <span className="text-xs text-neutral-400">Launch: <strong className="text-neutral-300">{formatDateForDisplay(p.launch)}</strong></span>}
               {p.owner && <span className="text-xs text-neutral-400">Owner: <strong className="text-neutral-300">{p.owner}</strong></span>}
               <Badge className={`${sc.bg} ${sc.text} ${sc.border} text-[10px]`}>{STATUS_LABELS[p.status]}</Badge>
               {p.type && <Badge className={`${tc.bg} ${tc.text} ${tc.border} text-[10px]`}>{p.type}</Badge>}
               {p.tier && <Badge className={`${trc.bg} ${trc.text} ${trc.border} text-[10px]`}>{p.tier}</Badge>}
-              {p.cx && <Badge className={`${cxc.bg} ${cxc.text} text-[10px] border border-transparent`}>{p.cx}</Badge>}
+              {p.rd_class && <Badge className={`${rdc.bg} ${rdc.text} text-[10px] border border-transparent`}>{p.rd_class}</Badge>}
+              {p.biz_class && <Badge className={`${bzc.bg} ${bzc.text} text-[10px] border border-transparent`}>{p.biz_class}</Badge>}
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -193,9 +203,12 @@ export default function ProjectDetailPage({ project: p, refreshProjects, colors,
                               const isEditing = editingStep?.phaseId === ph.id && editingStep?.stepId === s.id;
                               const revCount = (s.date_history || []).length;
                               return (
-                                <tr key={s.id} className="border-b border-neutral-800/50 hover:bg-neutral-800/30" data-testid={`step-${s.id}`}>
+                                <tr key={s.id} className={`border-b border-neutral-800/50 hover:bg-neutral-800/30 ${s.critical ? 'border-l-2 border-l-amber-400/40' : ''}`} data-testid={`step-${s.id}`}>
                                   <td className="px-4 py-2.5">
-                                    <div className="text-xs text-neutral-200">{s.step}</div>
+                                    <div className="flex items-center gap-1.5">
+                                      {s.critical && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Critical step" />}
+                                      <span className="text-xs text-neutral-200">{s.step}</span>
+                                    </div>
                                     {s.problem && <div className="text-[11px] text-rose-400 mt-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" />{s.problem}</div>}
                                     {s.remark && <div className="text-[11px] text-neutral-500 mt-0.5 italic">{s.remark}</div>}
                                   </td>
@@ -208,16 +221,16 @@ export default function ProjectDetailPage({ project: p, refreshProjects, colors,
                                   </td>
                                   <td className="px-3 py-2.5">
                                     {isEditing ? (
-                                      <input value={editForm.planned} onChange={e => setEditForm(f => ({ ...f, planned: e.target.value }))} placeholder="e.g. 15th Mar" className="w-full h-6 bg-neutral-950 border border-neutral-700 rounded px-1.5 text-[11px] text-white font-mono focus:outline-none focus:ring-1 focus:ring-neutral-600" />
+                                      <input value={editForm.planned} onChange={e => setEditForm(f => ({ ...f, planned: e.target.value }))} placeholder="e.g. 2025-03-15" className="w-full h-6 bg-neutral-950 border border-neutral-700 rounded px-1.5 text-[11px] text-white font-mono focus:outline-none focus:ring-1 focus:ring-neutral-600" />
                                     ) : (
-                                      <span className="text-[11px] font-mono text-neutral-500 cursor-pointer hover:text-white" onClick={() => startEditStep(ph.id, s)}>{s.planned || '—'}</span>
+                                      <DatePickerInline value={s.planned} onChange={v => { handleDateChange(ph.id, s.id, 'planned', v); }} placeholder="Set date" />
                                     )}
                                   </td>
                                   <td className="px-3 py-2.5">
                                     {isEditing ? (
-                                      <input value={editForm.actual} onChange={e => setEditForm(f => ({ ...f, actual: e.target.value }))} placeholder="e.g. 18th Mar" className="w-full h-6 bg-neutral-950 border border-neutral-700 rounded px-1.5 text-[11px] text-white font-mono focus:outline-none focus:ring-1 focus:ring-neutral-600" />
+                                      <input value={editForm.actual} onChange={e => setEditForm(f => ({ ...f, actual: e.target.value }))} placeholder="e.g. 2025-03-18" className="w-full h-6 bg-neutral-950 border border-neutral-700 rounded px-1.5 text-[11px] text-white font-mono focus:outline-none focus:ring-1 focus:ring-neutral-600" />
                                     ) : (
-                                      <span className="text-[11px] font-mono text-neutral-500 cursor-pointer hover:text-white" onClick={() => startEditStep(ph.id, s)}>{s.actual || '—'}</span>
+                                      <DatePickerInline value={s.actual} onChange={v => { handleDateChange(ph.id, s.id, 'actual', v); }} placeholder="Set date" />
                                     )}
                                   </td>
                                   <td className="px-3 py-2.5">

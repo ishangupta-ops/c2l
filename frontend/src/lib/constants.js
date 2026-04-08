@@ -32,10 +32,36 @@ export const TIER_COLORS = {
   'Commoner': { text: 'text-neutral-400', bg: 'bg-neutral-400/10', border: 'border-neutral-400/20' },
 };
 
-export const CX_COLORS = {
-  'Complex': { text: 'text-rose-400', bg: 'bg-rose-400/10' },
-  'Moderate': { text: 'text-amber-400', bg: 'bg-amber-400/10' },
-  'Simple': { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+// R&D Classification (replaces old complexity)
+export const RD_CLASSIFICATIONS = [
+  'Complex - Innovation',
+  'Complex - Prototype Tested',
+  'Non Complex - Variation L1',
+  'Non Complex - Variation L2',
+  'Shop & Deploy',
+];
+
+export const RD_COLORS = {
+  'Complex - Innovation': { text: 'text-rose-400', bg: 'bg-rose-400/10', border: 'border-rose-400/20' },
+  'Complex - Prototype Tested': { text: 'text-orange-400', bg: 'bg-orange-400/10', border: 'border-orange-400/20' },
+  'Non Complex - Variation L1': { text: 'text-amber-400', bg: 'bg-amber-400/10', border: 'border-amber-400/20' },
+  'Non Complex - Variation L2': { text: 'text-sky-400', bg: 'bg-sky-400/10', border: 'border-sky-400/20' },
+  'Shop & Deploy': { text: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/20' },
+};
+
+// Business Classification
+export const BIZ_CLASSIFICATIONS = [
+  'Focus - Core',
+  'Portfolio Filler - Growth',
+  'Experimental',
+  'Complementary - Support',
+];
+
+export const BIZ_COLORS = {
+  'Focus - Core': { text: 'text-violet-400', bg: 'bg-violet-400/10', border: 'border-violet-400/20' },
+  'Portfolio Filler - Growth': { text: 'text-cyan-400', bg: 'bg-cyan-400/10', border: 'border-cyan-400/20' },
+  'Experimental': { text: 'text-pink-400', bg: 'bg-pink-400/10', border: 'border-pink-400/20' },
+  'Complementary - Support': { text: 'text-lime-400', bg: 'bg-lime-400/10', border: 'border-lime-400/20' },
 };
 
 export const TEAMS = ['NPD', 'R&D', 'Design & Creatives', 'Supply', 'Quality'];
@@ -63,4 +89,30 @@ export function getBlockers(project) {
     })
   );
   return blockers;
+}
+
+// Date utilities
+export function formatDateForDisplay(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+}
+
+export function formatDateForStorage(date) {
+  if (!date) return '';
+  if (date instanceof Date) {
+    return date.toISOString().split('T')[0];
+  }
+  return date;
+}
+
+export function parseDateString(str) {
+  if (!str) return undefined;
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? undefined : d;
 }
