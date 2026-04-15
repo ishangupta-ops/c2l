@@ -179,6 +179,7 @@ class ProjectCreate(BaseModel):
     name: str
     cat: str = ""
     owner: str = ""
+    brand: str = ""
     launch: str = ""
     alau: str = ""
     pd: Optional[int] = None
@@ -188,6 +189,7 @@ class ProjectCreate(BaseModel):
     tier: str = "Challenger"
     rd_class: str = "Complex - Innovation"
     biz_class: str = "Focus - Core"
+    pkg_class: str = ""
     teams: List[str] = []
     pt: str = ""
     pe: str = ""
@@ -470,75 +472,44 @@ async def get_npd_template():
     return {"phases": NPD_TEMPLATE_PHASES}
 
 NPD_TEMPLATE_PHASES = [
-    {"id": "", "name": "Product Brief", "team": "NPD", "status": "pending", "progress": 0, "steps": [
+    {"id": "", "name": "Product Brief & Feasibility", "team": "NPD", "status": "pending", "progress": 0, "steps": [
         {"id": "", "step": "Product brief given", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Feasibility check of the product", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-    ]},
-    {"id": "", "name": "Product Feasibility & R&D", "team": "R&D", "status": "pending", "progress": 0, "steps": [
-        {"id": "", "step": "Sample of product received - study", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
         {"id": "", "step": "R&D samples approval", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Feedback run through - internal", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Feedback run through - external", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Claim verification - R&D <> Business", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Compile FDA Documents", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Claims study initiation", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
         {"id": "", "step": "Claims Results", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Check Base approval", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
+        {"id": "", "step": "Base approval", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Manufacturer finalization", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Product Approval", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-    ]},
-    {"id": "", "name": "Stability & Packaging Brief", "team": "R&D", "status": "pending", "progress": 0, "steps": [
         {"id": "", "step": "Preliminary Stability Initiated", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "1 Month Stability Confirmation", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Packaging Brief Closure", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
     ]},
-    {"id": "", "name": "Packaging Development", "team": "Supply", "status": "pending", "progress": 0, "steps": [
-        {"id": "", "step": "Packaging brief", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
+    {"id": "", "name": "Packaging & Color", "team": "Supply", "status": "pending", "progress": 0, "steps": [
+        {"id": "", "step": "Packaging brief closure", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Packaging options - Vendors", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Packaging at office", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Preliminary Test - Leakage, Dimension, COGS check", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Packaging sample given to Creatives", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Physical Packaging Approval", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-    ]},
-    {"id": "", "name": "Color & Design Closure", "team": "Design & Creatives", "status": "pending", "progress": 0, "steps": [
         {"id": "", "step": "Color input given", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "KLD received", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
         {"id": "", "step": "Final Packaging check - colour chips", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "SAMPLE Masterbatch", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Coloured article", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
+        {"id": "", "step": "Masterbatch", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Color Closure", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
     ]},
-    {"id": "", "name": "Brief Closure & Final Approvals", "team": "NPD", "status": "pending", "progress": 0, "steps": [
-        {"id": "", "step": "Brief Closure", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
+    {"id": "", "name": "Final Approvals & Formulation", "team": "NPD", "status": "pending", "progress": 0, "steps": [
         {"id": "", "step": "Final Product Approval - By Team", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Formulation closure", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Procurement Sheet", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Fact Sheet with Ingredients", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Pitch Sheet", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Compile FDA Documents", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "FDA Receipt", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
+        {"id": "", "step": "Fact Sheet with Ingredients / Pitch Sheet", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
     ]},
     {"id": "", "name": "Manufacturing Setup", "team": "Supply", "status": "pending", "progress": 0, "steps": [
         {"id": "", "step": "Master Batch Order", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "FG PO", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "Design approval from Manufacturer", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "PO to Vendor", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Prepare Manufacturing Documents", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Final Design file", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
         {"id": "", "step": "Final QC Clearance - Pack", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Online Proofing - label, monocarton", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
     ]},
     {"id": "", "name": "Conversion & Launch", "team": "Supply", "status": "pending", "progress": 0, "steps": [
-        {"id": "", "step": "Packaging Delivery - Indian", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
         {"id": "", "step": "Commercial dispatch", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
         {"id": "", "step": "RM/PM Delivery", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Final sample + shade card", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
         {"id": "", "step": "Production", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Packaging Delivery - China", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Test Report Collation", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
-        {"id": "", "step": "Update Document Sheet & MIL", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": False, "date_history": []},
         {"id": "", "step": "Warehouse Landing", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
-        {"id": "", "step": "Launch Date", "owner": "", "planned": "", "actual": "", "status": "pending", "problem": "", "remark": "", "critical": True, "date_history": []},
     ]},
 ]
 
@@ -549,7 +520,7 @@ async def seed_data():
     if proj_count > 0:
         return {"status": "already_seeded", "projects": proj_count}
     sample_projects = [
-        {"id": str(uuid.uuid4()), "name": "Herbal Body Wash — Neem & Tulsi", "cat": "Personal Care", "owner": "Priya S.", "launch": "2025-04-15", "alau": "", "pd": 90, "ad": None, "status": "on-track", "type": "NPD", "tier": "Challenger", "rd_class": "Non Complex - Variation L1", "biz_class": "Focus - Core", "teams": ["NPD", "R&D", "Design & Creatives", "Supply", "Quality"], "pt": "Existing", "pe": "Executable", "pn": "Standard pump bottle, existing mold", "notes": "Priority Q2 launch.",
+        {"id": str(uuid.uuid4()), "name": "Herbal Body Wash — Neem & Tulsi", "cat": "Personal Care", "owner": "Priya S.", "brand": "mCaffeine", "launch": "2025-04-15", "alau": "", "pd": 90, "ad": None, "status": "on-track", "type": "NPD", "tier": "Challenger", "rd_class": "Non Complex - Variation L1", "biz_class": "Focus - Core", "pkg_class": "Non Complex - Variation to established", "teams": ["NPD", "R&D", "Design & Creatives", "Supply", "Quality"], "pt": "Existing", "pe": "Executable", "pn": "Standard pump bottle, existing mold", "notes": "Priority Q2 launch.",
          "phases": [
             {"id": str(uuid.uuid4()), "name": "Product Brief", "team": "NPD", "status": "done", "progress": 100, "steps": [
                 {"id": str(uuid.uuid4()), "step": "Product brief given", "owner": "Tanya", "planned": "19th Feb", "actual": "19th Feb", "status": "done", "problem": "", "remark": "", "date_history": []},
@@ -564,7 +535,7 @@ async def seed_data():
                 {"id": str(uuid.uuid4()), "step": "Vendor shortlist", "owner": "Neha", "planned": "25th Feb", "actual": "28th Feb", "status": "done", "problem": "", "remark": "3-day lag", "date_history": []},
             ]},
         ]},
-        {"id": str(uuid.uuid4()), "name": "SPF 50 Sunscreen — Matte", "cat": "Skincare", "owner": "Rahul M.", "launch": "2025-05-02", "alau": "", "pd": 90, "ad": 120, "status": "at-risk", "type": "NPD", "tier": "Disruptor", "rd_class": "Complex - Innovation", "biz_class": "Focus - Core", "teams": ["NPD", "R&D", "Supply", "Quality"], "pt": "New", "pe": "Tough to Execute", "pn": "Airless pump — China sourcing", "notes": "Stability pending.",
+        {"id": str(uuid.uuid4()), "name": "SPF 50 Sunscreen — Matte", "cat": "Skincare", "owner": "Rahul M.", "brand": "Hyphen", "launch": "2025-05-02", "alau": "", "pd": 90, "ad": 120, "status": "at-risk", "type": "NPD", "tier": "Disruptor", "rd_class": "Complex - Innovation", "biz_class": "Focus - Core", "pkg_class": "Complex - Innovation - China Sourced", "teams": ["NPD", "R&D", "Supply", "Quality"], "pt": "New", "pe": "Tough to Execute", "pn": "Airless pump — China sourcing", "notes": "Stability pending.",
          "phases": [
             {"id": str(uuid.uuid4()), "name": "Product Brief", "team": "NPD", "status": "done", "progress": 100, "steps": [
                 {"id": str(uuid.uuid4()), "step": "Brief issued", "owner": "Tanya", "planned": "15th Jan", "actual": "15th Jan", "status": "done", "problem": "", "remark": "", "date_history": []},
@@ -579,13 +550,13 @@ async def seed_data():
                 {"id": str(uuid.uuid4()), "step": "Brief given", "owner": "Tanya", "planned": "15th Sept", "actual": "9th Oct", "status": "done", "problem": "Volume/MRP not shared — 24-day delay", "remark": "", "date_history": []},
             ]},
         ]},
-        {"id": str(uuid.uuid4()), "name": "Diwali Gift Kit 2025", "cat": "Gift", "owner": "Suruchi M.", "launch": "2025-10-01", "alau": "", "pd": 60, "ad": None, "status": "on-track", "type": "Gift Kit", "tier": "Challenger", "rd_class": "Non Complex - Variation L2", "biz_class": "Complementary - Support", "teams": ["NPD", "Design & Creatives", "Supply"], "pt": "New", "pe": "Tough to Execute", "pn": "Custom rigid box with foam insert", "notes": "Hamper with 4 existing SKUs.",
+        {"id": str(uuid.uuid4()), "name": "Diwali Gift Kit 2025", "cat": "Gift", "owner": "Suruchi M.", "brand": "Hyphen", "launch": "2025-10-01", "alau": "", "pd": 60, "ad": None, "status": "on-track", "type": "Gift Kit", "tier": "Challenger", "rd_class": "Non Complex - Variation L2", "biz_class": "Complementary - Support", "pkg_class": "Complex - India Sourced - Innovation", "teams": ["NPD", "Design & Creatives", "Supply"], "pt": "New", "pe": "Tough to Execute", "pn": "Custom rigid box with foam insert", "notes": "Hamper with 4 existing SKUs.",
          "phases": [
             {"id": str(uuid.uuid4()), "name": "Kit Brief", "team": "NPD", "status": "done", "progress": 100, "steps": [
                 {"id": str(uuid.uuid4()), "step": "SKU selection", "owner": "Tanya", "planned": "1st July", "actual": "1st July", "status": "done", "problem": "", "remark": "", "date_history": []},
             ]},
         ]},
-        {"id": str(uuid.uuid4()), "name": "Vitamin C Serum — CPR", "cat": "Skincare", "owner": "Arjun K.", "launch": "2025-03-30", "alau": "2025-05-15", "pd": 45, "ad": 76, "status": "delayed", "type": "CPR", "tier": "Disruptor", "rd_class": "Complex - Prototype Tested", "biz_class": "Experimental", "teams": ["NPD", "R&D", "Quality"], "pt": "Existing", "pe": "Executable", "pn": "Same packaging, label update only", "notes": "Stability failed at 40C.",
+        {"id": str(uuid.uuid4()), "name": "Vitamin C Serum — CPR", "cat": "Skincare", "owner": "Arjun K.", "brand": "Hyphen", "launch": "2025-03-30", "alau": "2025-05-15", "pd": 45, "ad": 76, "status": "delayed", "type": "CPR", "tier": "Disruptor", "rd_class": "Complex - Prototype Tested", "biz_class": "Experimental", "pkg_class": "Complex - Mould - Glass", "teams": ["NPD", "R&D", "Quality"], "pt": "Existing", "pe": "Executable", "pn": "Same packaging, label update only", "notes": "Stability failed at 40C.",
          "phases": [
             {"id": str(uuid.uuid4()), "name": "R&D Reformulation", "team": "R&D", "status": "done", "progress": 100, "steps": [
                 {"id": str(uuid.uuid4()), "step": "Stability test (failed)", "owner": "Harshita", "planned": "20th Feb", "actual": "20th Feb", "status": "done", "problem": "Failed at 40C/75% RH", "remark": "", "date_history": []},
